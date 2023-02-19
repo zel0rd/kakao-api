@@ -44,7 +44,7 @@
         function loginWithKakao() {
             var token = getCookie()
             Kakao.Auth.authorize({
-                redirectUri: 'http://127.0.0.1:5555/index.html',
+                redirectUri: 'https://zel0rd.github.io/kakao-api/',
                 scope: 'openid,friends,profile_nickname,profile_image,talk_message',
             });
         }
@@ -82,7 +82,7 @@
             if (code) {
                 data['grant_type'] = 'authorization_code'
                 data['client_id'] = '42a21996a758331b62d98a6bbc93892a'
-                data['redirect_uri'] = 'http://127.0.0.1:5555/index.html'
+                data['redirect_uri'] = 'https://zel0rd.github.io/kakao-api/'
                 data['code'] = code
 
                 const queryStringBody = Object.keys(data)
