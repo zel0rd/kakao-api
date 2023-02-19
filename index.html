@@ -31,7 +31,7 @@
 
     <div id="send-message" style="display:none;">
         <h2>이동할 블로그 링크를 넣으세요(https://zel0rd.tistory.com/206)</h2>
-        <input type="text" value="https://zel0rd.tistory.com/206">
+        <input id="blog-link" type="text" value="https://zel0rd.tistory.com/206">
         <h2>아래에 뉴스 요약내용을 넣으세요.</h2>
         <textarea name="message" id="message" cols="30" rows="10"></textarea>
         <button id="kakaotalk-sharing-btn" onclick="shareMessage()">보내기</button>
@@ -148,8 +148,8 @@
                 objectType: 'text',
                 text: document.querySelector('#message').value,
                 link: {
-                    mobileWebUrl: 'https://zel0rd.tistory.com/206',
-                    webUrl: 'https://zel0rd.tistory.com/206',
+                    mobileWebUrl: document.querySelector('#blog-link').value,
+                    webUrl: document.querySelector('#blog-link').value
                 },
             });
 
