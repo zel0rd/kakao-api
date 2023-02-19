@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.1.0/kakao.min.js"
+        integrity="sha384-dpu02ieKC6NUeKFoGMOKz6102CLEWi9+5RQjWSV0ikYSFFd8M3Wp2reIcquJOemx"
+        crossorigin="anonymous"></script>
+    
+        <style>
+            #send-message {
+                flex-direction: column;
+                gap:30px;
+            }
+        </style>
+</head>
+
+<body>
+    <h1>카카오톡으로 공유하기</h1>
+
+
+    <a id="kakao-login-btn" href="javascript:loginWithKakao()">
+        <img src="https://k.kakaocdn.net/14/dn/btroDszwNrM/I6efHub1SN5KCJqLm1Ovx1/o.jpg" width="222" alt="카카오 로그인 버튼" />
+    </a>
+    <p id="token-result"></p>
+    <button class="api-btn" onclick="sendToFriends()" style="visibility:hidden">친구에게 메시지 보내기</button>
+    <div class="my-profile"></div>
+
+    <div id="send-message" style="display:none;">
+        <h2>이동할 블로그 링크를 넣으세요(https://zel0rd.tistory.com/206)</h2>
+        <input type="text" value="https://zel0rd.tistory.com/206">
+        <h2>아래에 뉴스 요약내용을 넣으세요.</h2>
+        <textarea name="message" id="message" cols="30" rows="10"></textarea>
+        <button id="kakaotalk-sharing-btn" onclick="shareMessage()">보내기</button>
+    </div>
+
+    <script>
+        Kakao.init('4ebd4d1f1f1ef4054f43ae028d663195'); // 사용하려는 앱의 JavaScript 키 입력
+    </script>
+    <script>
+        function loginWithKakao() {
+            var token = getCookie()
+            Kakao.Auth.authorize({
+                redirectUri: 'http://127.0.0.1:5555/index.html',
+                scope: 'openid,friends,profile_nickname,profile_image,talk_message',
+            });
+        }
+
+        // 아래는 데모를 위한 UI 코드입니다.
+        // displayToken()
+        function displayToken(token) {
+            if (token) {
+                Kakao.Auth.setAccessToken(token);
+                Kakao.Auth.getStatusInfo()
+                    .then(function (res) {
+                        if (res.status === 'connected') {
+                            document.getElementById('token-result').innerText
+                                = '로그인 성공!'
+                        }
+                        document.querySelector('button.api-btn').style.visibility = 'visible';
+                    })
+                    .catch(function (err) {
+                        Kakao.Auth.setAccessToken(null);
+                    });
+            }
+        }
+
+        function getCookie(name) {
+            var parts = document.cookie.split(name + '=');
+            if (parts.length === 2) { return parts[1].split(';')[0]; }
+        }
+
+        function init() {
+            const urlStr = window.location.href
+            const url = new URL(urlStr)
+            const code = url.searchParams.get('code')
+            let data = {}
+
+            if (code) {
+                data['grant_type'] = 'authorization_code'
+                data['client_id'] = '42a21996a758331b62d98a6bbc93892a'
+                data['redirect_uri'] = 'http://127.0.0.1:5555/index.html'
+                data['code'] = code
+
+                const queryStringBody = Object.keys(data)
+                    .map(k => encodeURIComponent(k) + "=" + encodeURI(data[k]))
+                    .join("&")
+                fetchPost('https://kauth.kakao.com/oauth/token', queryStringBody)
+            }
+        }
+
+        function KakaoLogout() {
+            Kakao.Auth.logout()
+                .then(function (response) {
+                    console.log(Kakao.Auth.getAccessToken()); // null
+                })
+                .catch(function (error) {
+                    console.log('Not logged in.');
+                });
+        }
+
+        function fetchPost(url, queryStringBody) {
+            fetch(url, {
+                method: 'POST', // or 'PUT'
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: queryStringBody,
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log('Success:', data);
+                    displayToken(data.access_token);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function getMyprofile() {
+
+            Kakao.API.request({
+                url: '/v1/api/talk/profile',
+            })
+                .then(function (response) {
+                    renderProfile(response)
+
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
+        function renderProfile(data) {
+            let profile = document.querySelector('.my-profile');
+
+
+            let profile_nickname = document.createElement('span');
+            profile_nickname.innerText = data.nickName + '님 안녕하세요';
+            profile.appendChild(profile_nickname);
+        }
+
+        function shareMessage() {
+            Kakao.Share.createDefaultButton({
+                container: '#kakaotalk-sharing-btn',
+                objectType: 'text',
+                text: document.querySelector('#message').value,
+                link: {
+                    mobileWebUrl: 'https://zel0rd.tistory.com/206',
+                    webUrl: 'https://zel0rd.tistory.com/206',
+                },
+            });
+
+        }
+
+        function sendToFriends() {
+            getMyprofile()
+            document.querySelector('#send-message').style.display = 'flex'
+        }
+
+        function uploadImage() {
+
+            var files = document.getElementById('input-file').files;
+
+            Kakao.Share.uploadImage({
+                file: files,
+            })
+                .then(function (response) {
+                    console.log(response.infos.original.url);
+
+                    document.querySelector('#upload-images').innerHTML += `< img style="width:500px;height:500px;" src='${response.infos.original.url}' >`;
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
+
+        init()
+    </script>
+
+</body>
+
+</html>
